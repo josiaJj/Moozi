@@ -1,5 +1,6 @@
 package school.hei.moozi
 
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.activity.enableEdgeToEdge
@@ -9,25 +10,35 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
+
 class MainActivity : AppCompatActivity() {
+    private var mediaPlayer: MediaPlayer? = null
+    private fun playAudio(filePath: String) {
+        mediaPlayer?.release()  // Libère l'ancien MediaPlayer s'il existe
+        mediaPlayer = MediaPlayer().apply {
+            setDataSource(filePath)
+            prepare()
+            start()
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        // Appliquer les insets pour l'affichage plein écran
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // Initialisation du RecyclerView
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         val audioList = getAudioFiles()
-        recyclerView.adapter = AudioAdapter(audioList)
+        recyclerView.adapter = AudioAdapter(audioList) { audioFile ->
+            playAudio(audioFile.data)  // Joue la musique au clic
+        }
     }
     private fun getAudioFiles(): List<AudioFile> {
         val audioList = mutableListOf<AudioFile>()
