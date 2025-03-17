@@ -3,6 +3,7 @@ package school.hei.moozi
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.provider.MediaStore
+import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -12,15 +13,55 @@ import androidx.recyclerview.widget.RecyclerView
 
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var playPauseButton: Button
+    private lateinit var prevButton: Button
+    private lateinit var nextButton: Button
+    private var isPlaying = false
+    private var currentIndex = 0
+    private lateinit var audioList: List<AudioFile>
     private var mediaPlayer: MediaPlayer? = null
+
     private fun playAudio(filePath: String) {
-        mediaPlayer?.release()  // Libère l'ancien MediaPlayer s'il existe
+        mediaPlayer?.release()
         mediaPlayer = MediaPlayer().apply {
             setDataSource(filePath)
             prepare()
             start()
+            playPauseButton.text = "⏸" // Change l’icône en pause
+
+            setOnCompletionListener {
+                playNext() // Passe à la musique suivante automatiquement
+            }
+        }
+        isPlaying = true // Déplacer cette ligne ici
+    }
+
+    private fun pauseAudio() {
+        mediaPlayer?.pause()
+        isPlaying = false
+        playPauseButton.text = "▶"
+    }
+
+    private fun resumeAudio() {
+        mediaPlayer?.start()
+        isPlaying = true
+        playPauseButton.text = "⏸"
+    }
+
+    private fun playNext() {
+        if (audioList.isNotEmpty()) {
+            currentIndex = (currentIndex + 1) % audioList.size
+            playAudio(audioList[currentIndex].data)
         }
     }
+
+    private fun playPrevious() {
+        if (audioList.isNotEmpty()) {
+            currentIndex = if (currentIndex - 1 < 0) audioList.size - 1 else currentIndex - 1
+            playAudio(audioList[currentIndex].data)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -35,11 +76,31 @@ class MainActivity : AppCompatActivity() {
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        val audioList = getAudioFiles()
+        // Initialisation des boutons de contrôle
+        playPauseButton = findViewById(R.id.playPauseButton)
+        prevButton = findViewById(R.id.prevButton)
+        nextButton = findViewById(R.id.nextButton)
+
+        audioList = getAudioFiles() // Récupère les fichiers audio
+
         recyclerView.adapter = AudioAdapter(audioList) { audioFile ->
+            currentIndex = audioList.indexOf(audioFile) // Met à jour l'index courant
             playAudio(audioFile.data)  // Joue la musique au clic
         }
+
+        // Gestion des boutons
+        playPauseButton.setOnClickListener {
+            if (isPlaying) {
+                pauseAudio()
+            } else {
+                resumeAudio()
+            }
+        }
+
+        prevButton.setOnClickListener { playPrevious() }
+        nextButton.setOnClickListener { playNext() }
     }
+
     private fun getAudioFiles(): List<AudioFile> {
         val audioList = mutableListOf<AudioFile>()
         val contentResolver = contentResolver
