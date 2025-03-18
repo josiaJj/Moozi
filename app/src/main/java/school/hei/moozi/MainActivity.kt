@@ -3,7 +3,6 @@ package school.hei.moozi
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Intent
-import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -15,7 +14,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-
 class MainActivity : AppCompatActivity() {
     private lateinit var playPauseButton: Button
     private lateinit var prevButton: Button
@@ -23,67 +21,7 @@ class MainActivity : AppCompatActivity() {
     private var isPlaying = false
     private var currentIndex = 0
     private lateinit var audioList: List<AudioFile>
-    private var mediaPlayer: MediaPlayer? = null
 
-    private fun playAudio(filePath: String) {
-        mediaPlayer?.release()
-        mediaPlayer = MediaPlayer().apply {
-            setDataSource(filePath)
-            prepare()
-            start()
-            playPauseButton.text = "⏸" // Change l’icône en pause
-
-            setOnCompletionListener {
-                playNext() // Passe à la musique suivante automatiquement
-            }
-        }
-
-        isPlaying = true // Déplacer cette ligne ici
-
-        // 🔥 Démarrer le service de musique en arrière-plan
-        val serviceIntent = Intent(this, MusicService::class.java).apply {
-            putExtra("AUDIO_FILE", filePath) // Passer le fichier audio au service
-        }
-        startService(serviceIntent)
-    }
-
-    private fun pauseAudio() {
-        mediaPlayer?.pause()
-        isPlaying = false
-        playPauseButton.text = "▶"
-    }
-
-    private fun resumeAudio() {
-        mediaPlayer?.start()
-        isPlaying = true
-        playPauseButton.text = "⏸"
-    }
-
-    private fun playNext() {
-        if (audioList.isNotEmpty()) {
-            currentIndex = (currentIndex + 1) % audioList.size
-            playAudio(audioList[currentIndex].data)
-        }
-    }
-
-    private fun playPrevious() {
-        if (audioList.isNotEmpty()) {
-            currentIndex = if (currentIndex - 1 < 0) audioList.size - 1 else currentIndex - 1
-            playAudio(audioList[currentIndex].data)
-        }
-    }
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                "MUSIC_CHANNEL",
-                "Music Player",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val manager = getSystemService(NotificationManager::class.java)
-            manager?.createNotificationChannel(channel)
-        }
-    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         createNotificationChannel()
@@ -123,6 +61,62 @@ class MainActivity : AppCompatActivity() {
 
         prevButton.setOnClickListener { playPrevious() }
         nextButton.setOnClickListener { playNext() }
+    }
+
+    private fun playAudio(filePath: String) {
+        val serviceIntent = Intent(this, MusicService::class.java).apply {
+            putExtra("AUDIO_FILE", filePath)
+        }
+        startService(serviceIntent)
+
+        isPlaying = true
+        playPauseButton.text = "⏸" // Met à jour l'icône
+    }
+
+    private fun pauseAudio() {
+        val serviceIntent = Intent(this, MusicService::class.java).apply {
+            putExtra("ACTION", "PAUSE")
+        }
+        startService(serviceIntent)
+
+        isPlaying = false
+        playPauseButton.text = "▶"
+    }
+
+    private fun resumeAudio() {
+        val serviceIntent = Intent(this, MusicService::class.java).apply {
+            putExtra("ACTION", "PLAY")
+        }
+        startService(serviceIntent)
+
+        isPlaying = true
+        playPauseButton.text = "⏸"
+    }
+
+    private fun playNext() {
+        if (audioList.isNotEmpty()) {
+            currentIndex = (currentIndex + 1) % audioList.size
+            playAudio(audioList[currentIndex].data)
+        }
+    }
+
+    private fun playPrevious() {
+        if (audioList.isNotEmpty()) {
+            currentIndex = if (currentIndex - 1 < 0) audioList.size - 1 else currentIndex - 1
+            playAudio(audioList[currentIndex].data)
+        }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "MUSIC_CHANNEL",
+                "Music Player",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val manager = getSystemService(NotificationManager::class.java)
+            manager?.createNotificationChannel(channel)
+        }
     }
 
     private fun getAudioFiles(): List<AudioFile> {
