@@ -1,6 +1,10 @@
 package school.hei.moozi
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Intent
 import android.media.MediaPlayer
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Button
@@ -33,7 +37,14 @@ class MainActivity : AppCompatActivity() {
                 playNext() // Passe à la musique suivante automatiquement
             }
         }
+
         isPlaying = true // Déplacer cette ligne ici
+
+        // 🔥 Démarrer le service de musique en arrière-plan
+        val serviceIntent = Intent(this, MusicService::class.java).apply {
+            putExtra("AUDIO_FILE", filePath) // Passer le fichier audio au service
+        }
+        startService(serviceIntent)
     }
 
     private fun pauseAudio() {
@@ -62,8 +73,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "MUSIC_CHANNEL",
+                "Music Player",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val manager = getSystemService(NotificationManager::class.java)
+            manager?.createNotificationChannel(channel)
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        createNotificationChannel()
+
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
