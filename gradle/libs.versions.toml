@@ -11,6 +11,7 @@ activity = "1.10.1"
 constraintlayout = "2.2.1"
 androidxMedia = "1.6.0"
 exoplayer = "2.19.0"
+core-splashscreen="1.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -23,6 +24,7 @@ androidx-activity = { group = "androidx.activity", name = "activity", version.re
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-media = { module = "androidx.media:media", version.ref = "androidxMedia" }
 exoplayer = { module = "com.google.android.exoplayer:exoplayer", version.ref = "exoplayer" }
+core-splashscreen={group= "androidx.core",name="core-splashscreen",version.ref="core-splashscreen"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

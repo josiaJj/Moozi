@@ -48,4 +48,5 @@ dependencies {
 
     implementation(libs.androidx.media)
     implementation(libs.exoplayer)
+    implementation(libs.core.splashscreen)
 }
